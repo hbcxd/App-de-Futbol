@@ -11,19 +11,25 @@
         tailwind.config = { darkMode: 'class' }
     </script>
 
-    <!-- Ocultar barra superior de Google Translate -->
+    <!-- Estilos personalizados para ocultar detalles de Google y Scrollbar -->
     <style>
+        /* Ocultar la barra superior que inyecta Google Translate */
         .goog-te-banner-frame.skiptranslate { display: none !important; }
         body { top: 0px !important; }
-        /* Ocultar scrollbar para el menú horizontal */
+        
+        /* Ocultar scrollbar para el menú horizontal pero mantener funcionalidad */
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
-    <!-- Script de Google Translate -->
+    <!-- Script oficial de Google Translate -->
     <script type="text/javascript">
         function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'es', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+            new google.translate.TranslateElement({
+                pageLanguage: 'es', 
+                includedLanguages: 'es,en,pt,fr,it,de',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
         }
     </script>
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
@@ -47,26 +53,37 @@
     <div id="menuAjustes" class="hidden absolute right-4 top-16 bg-white dark:bg-slate-800 p-5 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-600 w-64 z-50">
         <h3 class="font-bold mb-3 border-b border-slate-200 dark:border-slate-600 pb-2">Ajustes</h3>
         
+        <!-- Selector de Tema -->
         <div class="mb-4">
             <label class="block text-sm font-semibold mb-2">Tema Visual:</label>
-            <select id="selectTema" class="w-full bg-slate-100 dark:bg-slate-900 p-2 rounded border border-slate-300 dark:border-slate-700 cursor-pointer">
+            <select id="selectTema" class="w-full bg-slate-100 dark:bg-slate-900 p-2 rounded border border-slate-300 dark:border-slate-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none transition">
                 <option value="system">Adaptable al Teléfono</option>
                 <option value="light">Modo Claro</option>
                 <option value="dark">Modo Oscuro</option>
             </select>
         </div>
         
+        <!-- Selector de Idioma Personalizado -->
         <div>
             <label class="block text-sm font-semibold mb-2">Idioma:</label>
-            <!-- Aquí se inyecta el traductor de Google -->
-            <div id="google_translate_element" class="w-full overflow-hidden rounded"></div>
+            <select id="selectIdiomaPersonalizado" onchange="cambiarIdiomaGoogle(this.value)" class="w-full bg-slate-100 dark:bg-slate-900 p-2 rounded border border-slate-300 dark:border-slate-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <option value="es">Español</option>
+                <option value="en">Inglés (English)</option>
+                <option value="pt">Portugués (Português)</option>
+                <option value="fr">Francés (Français)</option>
+                <option value="it">Italiano</option>
+                <option value="de">Alemán (Deutsch)</option>
+            </select>
         </div>
+
+        <!-- El Traductor de Google (Oculto visualmente) -->
+        <div id="google_translate_element" style="display:none;"></div>
     </div>
 
     <!-- Barra de Búsqueda -->
     <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div class="relative max-w-md mx-auto">
-            <input type="text" placeholder="Buscar equipos, ligas o torneos..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <input type="text" id="buscador" placeholder="Buscar equipos, ligas o torneos..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
             <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
         </div>
     </div>
@@ -112,13 +129,23 @@
             if (val === 'dark') document.documentElement.classList.add('dark');
             else if (val === 'light') document.documentElement.classList.remove('dark');
             else {
-                // Modo Sistema
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
             }
         };
 
-        // 3. Lógica de Consumo de API (Tu Proxy)
+        // 3. Lógica del Traductor de Google Oculto
+        function cambiarIdiomaGoogle(idioma) {
+            let googleSelect = document.querySelector('.goog-te-combo');
+            if (googleSelect) {
+                googleSelect.value = idioma;
+                googleSelect.dispatchEvent(new Event('change'));
+            } else {
+                console.log("El traductor de Google aún no está listo.");
+            }
+        }
+
+        // 4. Lógica de Consumo de API (Tu Proxy de Firebase)
         async function renderizarPartidos() {
             const container = document.getElementById('app');
             try {
@@ -151,7 +178,7 @@
             }
         }
 
-        // Iniciar y Auto-Refrescar
+        // Iniciar y Auto-Refrescar datos
         renderizarPartidos();
         setInterval(renderizarPartidos, 60000);
     </script>
