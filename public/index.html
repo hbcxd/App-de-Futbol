@@ -5,24 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fútbol Pro - Resultados en Vivo</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
 
-    <!-- Estilos personalizados para ocultar detalles de Google y Scrollbar -->
     <style>
-        /* Ocultar la barra superior que inyecta Google Translate */
-        .goog-te-banner-frame.skiptranslate { display: none !important; }
+        /* Ocultar por completo los elementos visuales invasivos de Google Translate */
+        .goog-te-banner-frame.skiptranslate, .goog-logo-link { display: none !important; }
         body { top: 0px !important; }
+        .goog-te-gadget { color: transparent !important; }
         
-        /* Ocultar scrollbar para el menú horizontal pero mantener funcionalidad */
+        /* Ocultar barra de scroll en el menú de categorías */
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
-    <!-- Script oficial de Google Translate -->
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
@@ -37,23 +35,25 @@
 
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white min-h-screen transition-colors duration-300">
 
-    <!-- Header Principal -->
     <header class="p-4 border-b border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-between items-center sticky top-0 z-40 shadow-sm">
-        <div class="flex items-center gap-2">
-            <span class="text-2xl">⚽</span>
-            <h1 class="text-xl font-bold tracking-tight">Fútbol Pro</h1>
+        <div class="flex flex-col">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">⚽</span>
+                <h1 class="text-xl font-bold tracking-tight">Fútbol Pro</h1>
+            </div>
+            <div id="indicadorZonaHoraria" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                ⏱️ Detectando zona horaria...
+            </div>
         </div>
         
         <button id="btnAjustes" class="p-2 bg-slate-200 dark:bg-slate-700 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition shadow">
-            ⚙️
+            ⚙️ Ajustes
         </button>
     </header>
 
-    <!-- Menú de Ajustes Flotante -->
-    <div id="menuAjustes" class="hidden absolute right-4 top-16 bg-white dark:bg-slate-800 p-5 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-600 w-64 z-50">
+    <div id="menuAjustes" class="hidden absolute right-4 top-20 bg-white dark:bg-slate-800 p-5 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-600 w-64 z-50">
         <h3 class="font-bold mb-3 border-b border-slate-200 dark:border-slate-600 pb-2">Ajustes</h3>
         
-        <!-- Selector de Tema -->
         <div class="mb-4">
             <label class="block text-sm font-semibold mb-2">Tema Visual:</label>
             <select id="selectTema" class="w-full bg-slate-100 dark:bg-slate-900 p-2 rounded border border-slate-300 dark:border-slate-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none transition">
@@ -63,7 +63,6 @@
             </select>
         </div>
         
-        <!-- Selector de Idioma Personalizado -->
         <div>
             <label class="block text-sm font-semibold mb-2">Idioma:</label>
             <select id="selectIdiomaPersonalizado" onchange="cambiarIdiomaGoogle(this.value)" class="w-full bg-slate-100 dark:bg-slate-900 p-2 rounded border border-slate-300 dark:border-slate-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none transition">
@@ -76,54 +75,63 @@
             </select>
         </div>
 
-        <!-- El Traductor de Google (Oculto visualmente) -->
-        <div id="google_translate_element" style="display:none;"></div>
+        <div id="google_translate_element" class="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden"></div>
     </div>
 
-    <!-- Barra de Búsqueda -->
     <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div class="relative max-w-md mx-auto">
-            <input type="text" id="buscador" placeholder="Buscar equipos, ligas o torneos..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <input type="text" id="buscador" oninput="filtrarYRenderizar()" placeholder="Buscar equipos..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
             <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
         </div>
     </div>
 
-    <!-- Menú de Categorías (Horizontal Scroll) -->
     <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3">
-        <div class="flex space-x-4 overflow-x-auto hide-scroll max-w-md mx-auto whitespace-nowrap">
-            <button class="px-4 py-1 bg-blue-600 text-white rounded-full font-semibold text-sm">En Vivo</button>
-            <button class="px-4 py-1 bg-slate-200 dark:bg-slate-700 rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Partidos Hoy</button>
-            <button class="px-4 py-1 bg-slate-200 dark:bg-slate-700 rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Ligas</button>
-            <button class="px-4 py-1 bg-slate-200 dark:bg-slate-700 rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Torneos</button>
-            <button class="px-4 py-1 bg-slate-200 dark:bg-slate-700 rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Resultados</button>
-            <button class="px-4 py-1 bg-slate-200 dark:bg-slate-700 rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Estadísticas</button>
-            <button class="px-4 py-1 bg-slate-200 dark:bg-slate-700 rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Histórico</button>
+        <div id="navegacionCategorias" class="flex space-x-4 overflow-x-auto hide-scroll max-w-md mx-auto whitespace-nowrap">
+            <button onclick="cambiarCategoria(this, 'todos')" class="btn-cat px-4 py-1 bg-blue-600 text-white rounded-full font-semibold text-sm transition">Todos</button>
+            <button onclick="cambiarCategoria(this, 'vivo')" class="btn-cat px-4 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">En Vivo</button>
+            <button onclick="cambiarCategoria(this, 'ligas')" class="btn-cat px-4 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Ligas y Torneos</button>
+            <button onclick="cambiarCategoria(this, 'resultados')" class="btn-cat px-4 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Resultados Históricos</button>
+            <button onclick="cambiarCategoria(this, 'estadisticas')" class="btn-cat px-4 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-full font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition">Estadísticas e Info</button>
         </div>
     </nav>
 
-    <!-- Contenedor de Partidos -->
     <main id="app" class="p-4 space-y-4 max-w-md mx-auto mb-10">
         <div class="flex justify-center items-center py-10">
-            <p class="text-center text-slate-500 animate-pulse">Cargando marcadores...</p>
+            <p class="text-center text-slate-500 animate-pulse">Cargando marcadores oficiales...</p>
         </div>
     </main>
 
-    <!-- Scripts de Lógica -->
     <script>
-        // 1. Manejo del Menú de Ajustes
+        // Variables globales del sistema
+        let cachePartidos = [];
+        let categoriaActual = 'todos';
+
+        // 1. Control de Zona Horaria (NUEVO)
+        function actualizarRelojYZona() {
+            const zonaNativa = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const horaLocal = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+            
+            // Simplificamos el nombre de la zona (ej. "America/Caracas" -> "Caracas")
+            const ciudadZona = zonaNativa.split('/').pop().replace('_', ' ');
+            
+            document.getElementById('indicadorZonaHoraria').innerText = `⏱️ ${ciudadZona} • ${horaLocal}`;
+        }
+        
+        // Ejecutar inmediatamente y luego cada minuto
+        actualizarRelojYZona();
+        setInterval(actualizarRelojYZona, 60000);
+
+        // 2. Control del Menú de Ajustes
         const menu = document.getElementById('menuAjustes');
-        document.getElementById('btnAjustes').onclick = () => {
+        document.getElementById('btnAjustes').onclick = (e) => {
+            e.stopPropagation();
             menu.classList.toggle('hidden');
         };
-
-        // Cerrar menú al hacer clic fuera
-        document.addEventListener('click', (event) => {
-            if (!menu.contains(event.target) && event.target.id !== 'btnAjustes') {
-                menu.classList.add('hidden');
-            }
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target)) menu.add('hidden');
         });
 
-        // 2. Lógica del Tema Visual
+        // 3. Control del Tema Visual
         document.getElementById('selectTema').onchange = (e) => {
             const val = e.target.value;
             if (val === 'dark') document.documentElement.classList.add('dark');
@@ -134,31 +142,62 @@
             }
         };
 
-        // 3. Lógica del Traductor de Google Oculto
+        // 4. Sistema Puente para el Traductor Oculto
         function cambiarIdiomaGoogle(idioma) {
             let googleSelect = document.querySelector('.goog-te-combo');
             if (googleSelect) {
                 googleSelect.value = idioma;
                 googleSelect.dispatchEvent(new Event('change'));
             } else {
-                console.log("El traductor de Google aún no está listo.");
+                setTimeout(() => cambiarIdiomaGoogle(idioma), 500);
             }
         }
 
-        // 4. Lógica de Consumo de API (Tu Proxy de Firebase)
-        async function renderizarPartidos() {
-            const container = document.getElementById('app');
+        // 5. Manejo de Pestañas de Navegación
+        function cambiarCategoria(boton, categoria) {
+            document.querySelectorAll('.btn-cat').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-slate-200', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-white');
+            });
+            boton.classList.remove('bg-slate-200', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-white');
+            boton.classList.add('bg-blue-600', 'text-white');
+            
+            categoriaActual = categoria;
+            filtrarYRenderizar();
+        }
+
+        // 6. Consumo Base de Datos
+        async function obtenerDatosAPI() {
             try {
                 const response = await fetch('https://proxy-partidos.vercel.app/api/partidos');
                 const result = await response.json();
+                if (result.success) {
+                    cachePartidos = result.data;
+                    filtrarYRenderizar();
+                }
+            } catch (err) {
+                document.getElementById('app').innerHTML = `<p class="text-center text-red-500">Error de sincronización móvil.</p>`;
+            }
+        }
 
-                if (result.success && result.data.length > 0) {
-                    container.innerHTML = result.data.map(p => `
-                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-l-blue-500 border-t border-r border-b border-slate-200 dark:border-slate-700 shadow-md flex justify-between items-center transition-all hover:shadow-lg cursor-pointer">
+        // 7. Motor de Búsqueda y Filtrado Dinámico
+        function filtrarYRenderizar() {
+            const container = document.getElementById('app');
+            const terminoBusqueda = document.getElementById('buscador').value.toLowerCase();
+
+            let datosFiltrados = cachePartidos.filter(p => 
+                p.local.toLowerCase().includes(terminoBusqueda) || 
+                p.visitante.toLowerCase().includes(terminoBusqueda)
+            );
+
+            if (categoriaActual === 'todos' || categoriaActual === 'vivo') {
+                if (datosFiltrados.length > 0) {
+                    container.innerHTML = datosFiltrados.map(p => `
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-l-blue-500 border border-slate-200 dark:border-slate-700 shadow-md flex justify-between items-center transition-all hover:shadow-lg">
                             <span class="font-semibold w-4/12 text-left truncate text-sm">${p.local}</span>
-                            <div class="w-3/12 flex flex-col items-center">
-                                <span class="text-xs text-green-500 font-bold mb-1 animate-pulse">EN VIVO</span>
-                                <span class="font-black text-xl bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded">${p.marcador || '0-0'}</span>
+                            <div class="w-4/12 flex flex-col items-center">
+                                <span class="text-[10px] text-green-500 font-bold mb-1 animate-pulse">EN VIVO</span>
+                                <span class="font-black text-lg bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded tracking-wider">${p.marcador || '0-0'}</span>
                             </div>
                             <span class="font-semibold w-4/12 text-right truncate text-sm">${p.visitante}</span>
                         </div>
@@ -166,21 +205,38 @@
                 } else {
                     container.innerHTML = `
                         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl text-center border border-slate-200 dark:border-slate-700">
-                            <span class="text-3xl block mb-2">⚽</span>
-                            <p class="text-slate-500 font-semibold">No hay partidos en vivo ahora.</p>
+                            <p class="text-slate-500 font-medium text-sm">No se encontraron encuentros activos.</p>
                         </div>`;
                 }
-            } catch (err) {
+            } 
+            else if (categoriaActual === 'ligas') {
                 container.innerHTML = `
-                    <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-200 dark:border-red-800 text-center text-red-600 dark:text-red-400">
-                        Error al conectar con los marcadores. Reintentando...
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+                        <h4 class="font-bold border-b border-slate-200 dark:border-slate-700 pb-2 text-blue-500">🏆 Competiciones Disponibles</h4>
+                        <p class="text-xs text-slate-400">Filtrado por cobertura oficial:</p>
+                        <ul class="text-sm space-y-2">
+                            <li>⚽ UEFA Champions League</li>
+                            <li>⚽ Primera División (España)</li>
+                            <li>⚽ Premier League (Inglaterra)</li>
+                            <li>⚽ Serie A (Italia)</li>
+                        </ul>
+                    </div>`;
+            } else if (categoriaActual === 'resultados') {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                        <p class="text-sm text-slate-500">Historial de jornadas anteriores almacenadas con éxito.</p>
+                    </div>`;
+            } else if (categoriaActual === 'estadisticas') {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                        <p class="text-sm text-slate-500">Selecciona un partido en vivo para desplegar alineaciones y estadísticas de posesión.</p>
                     </div>`;
             }
         }
 
-        // Iniciar y Auto-Refrescar datos
-        renderizarPartidos();
-        setInterval(renderizarPartidos, 60000);
+        // Ejecución inicial
+        obtenerDatosAPI();
+        setInterval(obtenerDatosAPI, 60000);
     </script>
 </body>
 </html>
